@@ -262,6 +262,7 @@ header {
   <div class="tab" data-t="A">A</div>
   <div class="tab" data-t="B">B</div>
   <div class="tab" data-t="D+">D/G</div>
+  <div class="tab" data-t="free">自由口袋</div>
 </div>
 
 <div class="search-wrap">
@@ -1106,6 +1107,76 @@ const CARDS = [
     "cost": 6,
     "img": "https://i.imgur.com/2ryAeK8.jpg",
     "desc": "瀕臨絕種的珍獸。非常喜歡清潔，入廚是興趣。愛好獨自裁製洋服及整理花園，比任何人都擅長照顧孩子"
+  },
+  {
+    "id": "-003", "name": "排除", "rarity": "-", "cost": 0,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1003.png",
+    "desc": "G.I以不當方法侵入的者，全部送往艾基恩大陸的某處"
+  },
+  {
+    "id": "163", "name": "病気の村人", "rarity": "F", "cost": 150,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1012.png",
+    "desc": "被島上疾病侵襲的村人們"
+  },
+  {
+    "id": "263", "name": "元気な村人", "rarity": "C", "cost": 50,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1005.png",
+    "desc": "從島上疾病中康復、恢復元氣的村人們"
+  },
+  {
+    "id": "1006", "name": "扒竊", "rarity": "F", "cost": 170,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1006.png",
+    "desc": "隨機從另一位玩家的自由口袋中竊取一張卡"
+  },
+  {
+    "id": "1010", "name": "擬態", "rarity": "A", "cost": 20,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1010.png",
+    "desc": "將持有的一張卡轉換為持有的另一張卡。變化後的卡計入該卡的卡片化限度枚數。若限度已MAX則變化失敗並「擬態」被銷毀"
+  },
+  {
+    "id": "1011", "name": "複製", "rarity": "D", "cost": 70,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1011.png",
+    "desc": "從目標玩家的指定口袋中隨機選一張卡並轉換為該卡。若目標沒有卡或卡片化限度已MAX則變化失敗，「複製」被銷毀"
+  },
+  {
+    "id": "1018", "name": "徵收", "rarity": "B", "cost": 25,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1018.png",
+    "desc": "從使用該咒語的玩家周圍半徑20m內的所有玩家中各隨機竊取一張牌"
+  },
+  {
+    "id": "1020", "name": "贋品", "rarity": "C", "cost": 40,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1020.png",
+    "desc": "將「贋品」偽裝成No.001到099的任意一張卡。可放入指定口袋但不符合收齊條件，也無法被實體化。不計入卡片化限度枚數"
+  },
+  {
+    "id": "1021", "name": "搶劫", "rarity": "B", "cost": 30,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1021.png",
+    "desc": "拿走另一位玩家持有的任意一張卡"
+  },
+  {
+    "id": "1032", "name": "寶籤", "rarity": "G", "cost": 350,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1032.png",
+    "desc": "轉換為一張隨機道具卡"
+  },
+  {
+    "id": "1035", "name": "堅牢", "rarity": "S", "cost": 10,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1035.png",
+    "desc": "指定頁面口袋中的卡片，只要還位於口袋中就永遠不會被咒語奪取或破壞。可指定第1到11頁任意一頁，不能選自由口袋頁"
+  },
+  {
+    "id": "1036", "name": "神眼", "rarity": "S", "cost": 10,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1036.png",
+    "desc": "使用此卡的玩家可對No.001到099的所有卡獲得「解析」和「名簿」效果，持續到使用者退出遊戲為止"
+  },
+  {
+    "id": "1038", "name": "名簿", "rarity": "G", "cost": 350,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1038.png",
+    "desc": "可指定一種目標道具，查詢當前持有該道具卡的人數和卡的總數"
+  },
+  {
+    "id": "1039", "name": "同行", "rarity": "F", "cost": 130,
+    "img": "https://blog.caref.xyz/figure/2021-05/hunter/spell/1039.png",
+    "desc": "半徑20m以內的所有玩家（包括使用者）都飛往指定城市（僅限去過的城市）或指定玩家（僅限遊戲中遇到過的玩家）所在地"
   }
 ];
 
@@ -1134,6 +1205,7 @@ function filtered() {
       case 'missing': return cnt(c.id) === 0;
       case 'SS': case 'S': case 'A': case 'B': return c.rarity === curTab;
       case 'D+': return ['D','G'].includes(c.rarity);
+      case 'free': return parseInt(c.id) >= 163 || c.id === '-003';
       default: return true;
     }
   });
@@ -1141,9 +1213,10 @@ function filtered() {
 
 // ── Stats ──
 function updateStats() {
-  const own = CARDS.filter(c => cnt(c.id) > 0).length;
+  const mainCards = CARDS.filter(c => !(parseInt(c.id) >= 163 || c.id === '-003'));
+  const own = mainCards.filter(c => cnt(c.id) > 0).length;
   const tot = CARDS.reduce((s,c) => s+cnt(c.id), 0);
-  const pct = Math.round(own/CARDS.length*100);
+  const pct = Math.round(own/mainCards.length*100);
   document.getElementById('sOwned').textContent = own;
   document.getElementById('sTotal').textContent = tot;
   document.getElementById('sPct').textContent = pct + '%';
