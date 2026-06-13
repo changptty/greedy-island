@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>貪婪之島 圖鑑</title>
+<meta name="theme-color" content="#0d0a05">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="貪婪之島">
+<link rel="manifest" href="manifest.json">
+<!-- Apple touch icon inline SVG fallback via data URI -->
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root {
+  --bg: #0d0a05;
+  --surface: #1a1208;
+  --card-cream: #f0e6c8;
+  --card-border: #7a1515;
+  --card-inner-border: #b8922a;
+  --gold: #c9960f;
+  --gold-bright: #f0c030;
+  --red: #8b1a1a;
+  --text: #ede0c0;
+  --text-dim: #8a7550;
+  --ss: #6a1b7a; --s: #1a4f8a; --a: #1a6e32; --b: #7a5010;
+  --c: #404040; --d: #8a3010; --f: #1a5858; --g: #5a1a5a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: linear-gradient(180deg, #1a0c04 0%, #0d0802 100%);
+  border-bottom: 2px solid var(--gold);
+  padding: 10px 14px 8px;
+}
+.hrow1 { display: flex; align-items: center; justify-content: space-between; }
+.title-wrap { display: flex; align-items: baseline; gap: 8px; }
+.title-main { font-size: 20px; font-weight: 900; color: var(--gold-bright); letter-spacing: 2px; text-shadow: 0 0 14px rgba(240,192,48,.5); }
+.title-sub { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+.stats { display: flex; gap: 14px; font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+.stats b { color: var(--gold-bright); font-size: 13px; }
+.prog-bar { height: 4px; background: #1a1208; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #e05020); border-radius: 2px; transition: width .4s; }
+
+/* ── TABS ── */
+.tabs {
+  position: sticky; top: 84px; z-index: 199;
+  display: flex; overflow-x: auto; scrollbar-width: none;
+  background: #0a0804;
+  border-bottom: 1px solid #3a2a10;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0; padding: 8px 14px; font-size: 12px;
+  color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+.tab.active { color: var(--gold-bright); border-bottom-color: var(--gold-bright); background: rgba(240,192,48,.06); }
+
+/* ── SEARCH ── */
+.search-wrap { padding: 10px 12px; background: var(--bg); }
+.search-input {
+  width: 100%; background: var(--surface); border: 1px solid #3a2a10;
+  border-radius: 6px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none;
+}
+.search-input:focus { border-color: var(--gold); }
+.search-input::placeholder { color: var(--text-dim); }
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px; padding: 0 10px 20px;
+  max-width: 640px; margin: 0 auto;
+}
+
+/* ── CARD ITEM ── */
+.card-item {
+  border-radius: 6px; border: 2px solid var(--card-border);
+  overflow: hidden; cursor: pointer; transition: transform .12s;
+  position: relative;
+  background: var(--card-cream);
+}
+.card-item:active { transform: scale(0.96); }
+.card-item.owned { box-shadow: 0 0 0 2px var(--gold), 0 3px 12px rgba(0,0,0,.6); }
+.card-item.not-owned { filter: saturate(50%) brightness(0.65); }
+
+.card-top {
+  background: #1a0a04; display: flex; align-items: center;
+  justify-content: space-between; padding: 3px 6px;
+  border-bottom: 1px solid var(--card-border);
+}
+.card-num { font-size: 10px; font-weight: 700; color: var(--card-inner-border); font-family: monospace; flex-shrink: 0; }
+.card-name-small {
+  font-size: 9px; color: #d4b870; text-align: center; flex: 1;
+  padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rarity-badge {
+  font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 2px;
+  color: #fff; flex-shrink: 0;
+}
+.r-SS { background: var(--ss); } .r-S { background: var(--s); }
+.r-A  { background: var(--a); } .r-B { background: var(--b); }
+.r-C  { background: var(--c); } .r-D { background: var(--d); }
+.r-F  { background: var(--f); } .r-G { background: var(--g); }
+.r-   { background: var(--c); }
+
+.card-img-wrap {
+  position: relative; overflow: hidden;
+  height: 140px; background: #2a1a08;
+  border-bottom: 1px solid var(--card-border);
+  display: flex; align-items: center; justify-content: center;
+}
+.card-img {
+  width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
+  display: block;
+}
+.img-fallback {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; background: #c8b888;
+}
+.cnt-badge {
+  position: absolute; top: 4px; right: 4px; z-index: 2;
+  background: var(--gold-bright); color: #1a0800;
+  font-size: 11px; font-weight: 900; min-width: 20px; height: 20px;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; border: 1.5px solid var(--card-border);
+}
+.cnt-badge.zero { background: #555; color: #888; border-color: #444; }
+
+.card-desc-area {
+  padding: 5px 7px; background: var(--card-cream);
+  font-size: 8.5px; color: #2a1808; line-height: 1.45;
+  height: 46px; overflow: hidden;
+}
+
+.card-ctrl {
+  display: flex; align-items: center; background: #1a0a04;
+  border-top: 1px solid var(--card-border);
+}
+.ctrl-btn {
+  flex: 0 0 36px; height: 30px; background: none; border: none;
+  color: var(--gold-bright); font-size: 18px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.ctrl-btn:active { background: rgba(240,192,48,.15); }
+.ctrl-num {
+  flex: 1; text-align: center; font-size: 12px; font-weight: 700;
+  color: var(--card-inner-border);
+}
+
+/* ── MODAL ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 500;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.overlay.hidden { display: none; }
+.modal {
+  background: var(--surface); border: 2px solid var(--gold);
+  border-radius: 10px; max-width: 340px; width: 100%;
+  max-height: 92vh; overflow-y: auto;
+}
+.modal-hd {
+  background: linear-gradient(135deg,#1a0a04,#2e1408);
+  padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--gold); border-radius: 8px 8px 0 0;
+  position: sticky; top: 0; z-index: 10;
+}
+.modal-hd-title { font-size: 15px; font-weight: 700; color: var(--gold-bright); }
+.modal-close { background: none; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; line-height: 1; }
+
+.modal-body { padding: 14px; }
+
+/* Card frame in modal */
+.mcard-frame {
+  border: 3px solid var(--card-border); border-radius: 6px; overflow: hidden;
+  background: var(--card-cream); margin-bottom: 14px;
+}
+.mcard-top {
+  background: #1a0a04; padding: 5px 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--card-border);
+}
+.mcard-img-wrap {
+  height: 240px; background: #2a1a08; overflow: hidden;
+  border-bottom: 2px solid var(--card-inner-border);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.mcard-img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.mcard-img-fallback {
+  width: 100%; height: 100%; display: flex;
+  align-items: center; justify-content: center; font-size: 64px;
+}
+.mcard-namebar {
+  background: #120804; text-align: center; padding: 4px 8px;
+  font-size: 12px; color: var(--card-inner-border);
+  border-bottom: 1px solid var(--card-border);
+}
+.mcard-text { padding: 10px 10px; font-size: 11px; color: #2a1808; line-height: 1.65; }
+
+/* Count row */
+.count-row {
+  background: #120804; border-radius: 8px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.count-label { font-size: 12px; color: var(--text-dim); flex: 1; }
+.count-ctrl { display: flex; align-items: center; gap: 8px; }
+.count-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid var(--gold); background: none;
+  color: var(--gold-bright); font-size: 20px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.count-btn:active { background: rgba(240,192,48,.2); }
+.count-num { font-size: 28px; font-weight: 900; color: var(--gold-bright); min-width: 40px; text-align: center; }
+
+.meta-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.chip { font-size: 11px; padding: 3px 8px; border-radius: 20px; }
+.chip-gold { background: rgba(201,150,15,.15); color: var(--gold-bright); }
+.chip-dim  { background: rgba(255,255,255,.06); color: var(--text-dim); }
+
+.empty { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--text-dim); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow1">
+    <div class="title-wrap">
+      <div class="title-main">🃏 貪婪之島</div>
+      <div class="title-sub">GREED ISLAND · 指定口袋卡圖鑑</div>
+    </div>
+  </div>
+  <div class="stats">
+    <span>持有 <b id="sOwned">0</b> 種</span>
+    <span>合計 <b id="sTotal">0</b> 張</span>
+    <span>完成 <b id="sPct">0%</b></span>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+</header>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-t="all">全部</div>
+  <div class="tab" data-t="owned">持有中</div>
+  <div class="tab" data-t="missing">未持有</div>
+  <div class="tab" data-t="SS">SS</div>
+  <div class="tab" data-t="S">S</div>
+  <div class="tab" data-t="A">A</div>
+  <div class="tab" data-t="B">B</div>
+  <div class="tab" data-t="D+">D/G</div>
+</div>
+
+<div class="search-wrap">
+  <input class="search-input" id="searchInput" placeholder="🔍 搜尋卡號、名稱或效果…">
+</div>
+
+<div class="grid" id="grid"></div>
+
+<!-- Modal -->
+<div class="overlay hidden" id="overlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title" id="mTitle">卡片詳情</div>
+      <button class="modal-close" id="mClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mcard-frame">
+        <div class="mcard-top">
+          <span id="mNum" style="font-size:13px;font-weight:700;color:#b8922a;font-family:monospace"></span>
+          <span id="mRarity" class="rarity-badge"></span>
+        </div>
+        <div class="mcard-img-wrap">
+          <img id="mImg" class="mcard-img" src="" alt="" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+          <div id="mFallback" class="mcard-img-fallback" style="display:none">🃏</div>
+        </div>
+        <div class="mcard-namebar" id="mName"></div>
+        <div class="mcard-text" id="mDesc"></div>
+      </div>
+
+      <div class="count-row">
+        <div class="count-label">我的持有數量</div>
+        <div class="count-ctrl">
+          <button class="count-btn" id="mMinus">−</button>
+          <div class="count-num" id="mCount">0</div>
+          <button class="count-btn" id="mPlus">＋</button>
+        </div>
+      </div>
+
+      <div class="meta-chips" id="mMeta"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CARDS = [
+  {
+    "id": "000",
+    "name": "支配者的祝福",
+    "rarity": "SS",
+    "cost": 1,
+    "img": "https://i.imgur.com/oOXj0xw.jpg",
+    "desc": "一座人口一萬的城鎮，鎮民會按照玩家的規定生活"
+  },
+  {
+    "id": "001",
+    "name": "一坪的密林",
+    "rarity": "SS",
+    "cost": 3,
+    "img": "https://i.imgur.com/YKW3TWr.jpg",
+    "desc": "有「山神的庭園」之稱的巨大森林的入口。有多種只會在此森林棲息的生物，任何動物都和人很親近"
+  },
+  {
+    "id": "002",
+    "name": "一坪的海岸線",
+    "rarity": "SS",
+    "cost": 3,
+    "img": "https://i.imgur.com/TIs3ckz.jpg",
+    "desc": "有「海神的棲息處」之稱的海底洞穴入口。每當進入洞穴的時候，內裡的形態會變化而令入侵者迷失"
+  },
+  {
+    "id": "003",
+    "name": "泉水之壺",
+    "rarity": "A",
+    "cost": 17,
+    "img": "https://i.imgur.com/TIiIGzM.jpg",
+    "desc": "經常會湧出清澈水的壺，一日會湧出1440公升的水"
+  },
+  {
+    "id": "004",
+    "name": "美肌溫泉",
+    "rarity": "A",
+    "cost": 15,
+    "img": "https://i.imgur.com/bANfVBw.jpg",
+    "desc": "能降解決任何肌膚問題的溫泉，一日浸三十分鐘，肌膚會變得像嬰兒般光滑"
+  },
+  {
+    "id": "005",
+    "name": "消失的洞",
+    "rarity": "S",
+    "cost": 8,
+    "img": "https://i.imgur.com/Aj6hzWI.jpg",
+    "desc": "走進走出這個洞之後，會去到人跡罕至的區域。但只會在國內，即使被傳送到那裡也好，不知所以一毫錢也不需要就能回到洞口"
+  },
+  {
+    "id": "006",
+    "name": "產酒之泉",
+    "rarity": "A",
+    "cost": 15,
+    "img": "https://i.imgur.com/ezDHugQ.jpg",
+    "desc": "汲取這個泉的水，就這樣放置一個星期就會變成酒。雖然酒的種類是隨機，但非常好味"
+  },
+  {
+    "id": "007",
+    "name": "懷孕之石",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/ogp9vEj.jpg",
+    "desc": "石不離身般將三公斤重的這顆石帶在身上一個月。成功一個星期後不論男女定必懷孕。有男石和女石兩個種類"
+  },
+  {
+    "id": "008",
+    "name": "不可思議的池",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/H3xosHJ.jpg",
+    "desc": "在這個池放的魚會日增一條。在任何水域生息的魚都可以在此池生息，一起游泳"
+  },
+  {
+    "id": "009",
+    "name": "豐收之樹",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/HLpsWGh.jpg",
+    "desc": "會結出各式各樣水果的樹。怎樣收成之後，第二天定必再結出大量果實，種類和數量是隨機"
+  },
+  {
+    "id": "010",
+    "name": "黃金rurubu",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/mDkvIf7.jpg",
+    "desc": "旅行的情報雜誌，記載著持有者與所喜歡的異性相遇的場所及時間（rurubu是日本有名的旅行雜誌）"
+  },
+  {
+    "id": "011",
+    "name": "黃金天秤",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/5fu4pBv.jpg",
+    "desc": "「取捨那一邊好？」被迫二選一情況時，這個天秤會替你選擇對你將來有利的一方"
+  },
+  {
+    "id": "012",
+    "name": "黃金辭典",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/ZqZX1HJ.jpg",
+    "desc": "會教授對持有者有用的字的辭典。打開辭典後，找尋發著金黃色光芒的詞彙及記下意思，第二日定必有用"
+  },
+  {
+    "id": "013",
+    "name": "幸福存摺",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/QENCV1J.jpg",
+    "desc": "將每日少少的運氣不使用而存在存摺當中，這些運氣可以換成錢提走"
+  },
+  {
+    "id": "014",
+    "name": "斷緣之剪",
+    "rarity": "B",
+    "cost": 22,
+    "img": "https://i.imgur.com/bAHLTKK.jpg",
+    "desc": "用這把剪刀去剪不想再見到的人的照片，就會以後都碰不到這個人。由於會對相片中的人全部有效（除了自己），要小心"
+  },
+  {
+    "id": "015",
+    "name": "反覆無常的魔人",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/ZZuc8Rq.jpg",
+    "desc": "能實現三個願望的魔人。但是，你要許一千個願望給魔人隨意選三個（只是增加金額的相同願望是不行的）"
+  },
+  {
+    "id": "016",
+    "name": "妖精王的忠告",
+    "rarity": "S",
+    "cost": 6,
+    "img": "https://i.imgur.com/eZOCHMt.jpg",
+    "desc": "好意告訴你的不足之處，怎樣改善等等良好的忠告。有時不叫他也跑出來，有點麻煩"
+  },
+  {
+    "id": "017",
+    "name": "大天使的氣息",
+    "rarity": "SS",
+    "cost": 3,
+    "img": "https://i.imgur.com/IWqQkxP.jpg",
+    "desc": "一口氣便治癒瀕死的重傷及不治之症，但只會現身一次"
+  },
+  {
+    "id": "018",
+    "name": "小惡魔的眼色",
+    "rarity": "A",
+    "cost": 18,
+    "img": "https://i.imgur.com/KRKnbB8.jpg",
+    "desc": "看到這個眼色的人，會體驗到無比的快感。多次看到這個眼色的話，小心會中毒"
+  },
+  {
+    "id": "019",
+    "name": "遊魂枕",
+    "rarity": "A",
+    "cost": 13,
+    "img": "https://i.imgur.com/yTU6mZj.jpg",
+    "desc": "用這個枕頭睡覺的話可以靈魂出竅。但是超過二十四小時不回軀體的話是會變成真的幽靈"
+  },
+  {
+    "id": "020",
+    "name": "心度計",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/7YUUFOe.jpg",
+    "desc": "可以測量你現在的精神狀態的鍾。調校到十二時會令精神狀態回復平靜，配合時間地點場合可以控制自己的心"
+  },
+  {
+    "id": "021",
+    "name": "骷髏眼鏡",
+    "rarity": "B",
+    "cost": 27,
+    "img": "https://i.imgur.com/N8dB0EZ.jpg",
+    "desc": "可以看穿物件的眼鏡，可以透過刻度控制強弱。只是看不穿唯一的魔法都市的法術卡袋"
+  },
+  {
+    "id": "022",
+    "name": "脫拉A夢",
+    "rarity": "A",
+    "cost": 22,
+    "img": "https://i.imgur.com/rqwA9PG.jpg",
+    "desc": "瀕臨絕種的猛獸。有將物件塞進腹中袋子的獸性，有不少的情況下會塞進多種超貴重的物品"
+  },
+  {
+    "id": "023",
+    "name": "即興書",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/diJ9hLh.jpg",
+    "desc": "每次看的時候都不同故事的書。當要暫停看的時候，如果沒有夾上特製的書籤，將會完全變成另一個故事，要留意"
+  },
+  {
+    "id": "024",
+    "name": "「假如」電視",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/gXNJ07X.jpg",
+    "desc": "在附屬的遙控上輸入「假如~的話」的文章。結果將會以1~30小時的記錄片形式播放，還可以錄影"
+  },
+  {
+    "id": "025",
+    "name": "風險骰子",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/rdSEXLH.jpg",
+    "desc": "有20面的骰子。有一面是大凶，19面是大吉。如果擲出了大吉會發生好事。但擲出了大凶的話，會將之前大吉的份量完完本本的變成不幸地發生"
+  },
+  {
+    "id": "026",
+    "name": "七個工作小矮人",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/Q8vwATy.jpg",
+    "desc": "會在主人睡覺的時候代替主人工作的小矮人，但不會回應超出主人能力的要求"
+  },
+  {
+    "id": "027",
+    "name": "免費通行回數卷",
+    "rarity": "B",
+    "cost": 25,
+    "img": "https://i.imgur.com/MPTqo9x.jpg",
+    "desc": "憑卷可以進入任何地方，一套一千張"
+  },
+  {
+    "id": "028",
+    "name": "「見異思遷」遙控",
+    "rarity": "B",
+    "cost": 27,
+    "img": "https://i.imgur.com/vBsyAOV.jpg",
+    "desc": "可以控制他人對其他人的想法。有10種感情及10段強弱選擇（但不能改變他人對自己的想法）"
+  },
+  {
+    "id": "029",
+    "name": "強制預約卷",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/X6U1RhP.jpg",
+    "desc": "任何商品也好，在這張卷寫上商品名稱之後定必到手。但是對沒有上市的物品無效。當然不能不付款，一套一千張"
+  },
+  {
+    "id": "030",
+    "name": "願望軟墊",
+    "rarity": "B",
+    "cost": 21,
+    "img": "https://i.imgur.com/rA5aCmC.jpg",
+    "desc": "讓任何一個人座上這個軟墊的話，這個人會聽取你一個要求。但要求不能超越那個座了上去的人的能力"
+  },
+  {
+    "id": "031",
+    "name": "給死者的往返明信片",
+    "rarity": "S",
+    "cost": 13,
+    "img": "https://i.imgur.com/YrziTqh.jpg",
+    "desc": "將寫上死者名字的寄出明信片上寫信。第二日在回覆明信片上會出現回覆，一套一千張"
+  },
+  {
+    "id": "032",
+    "name": "「黃鶯」糖",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/n6TqHh7.jpg",
+    "desc": "含著這粒糖，在下一次進食之前可以隨意發出任何聲音。一包50粒，一套10包"
+  },
+  {
+    "id": "033",
+    "name": "荷爾蒙巧克力",
+    "rarity": "S",
+    "cost": 13,
+    "img": "https://i.imgur.com/t8Mt011.jpg",
+    "desc": "吃下這塊巧克力，會在24小時之內變成另一個性別。一盒20塊，一套10盒"
+  },
+  {
+    "id": "034",
+    "name": "「不管什麼」問卷",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/L6lrlI0.jpg",
+    "desc": "在這張紙上寫上關於你的問題，交給他人。收到的人會老實地回答所有問題，可重複使用"
+  },
+  {
+    "id": "035",
+    "name": "變色龍貓",
+    "rarity": "S",
+    "cost": 6,
+    "img": "https://i.imgur.com/ezMBJjM.jpg",
+    "desc": "瀕臨絕種的珍獸。養熟了之後可以變身成各種動物。但是由於不能改變體積，會變成細小的象和大種倉鼠…"
+  },
+  {
+    "id": "036",
+    "name": "循環回收房",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/dL3yMZ8.jpg",
+    "desc": "將壞了的東西放進這間房。24小時之後會被修理好，像新的一樣。但絕對不要在預定時間之前打開房門"
+  },
+  {
+    "id": "037",
+    "name": "超一流運動選手之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/XyXzdcB.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "038",
+    "name": "超一流藝術家之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/rS6DXR7.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "039",
+    "name": "大政治家之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/ApI6D6B.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "040",
+    "name": "超一流音樂家之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/gSMhg2n.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "041",
+    "name": "超一流飛行員之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/Hmbp6rX.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "042",
+    "name": "超一流作家之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/8aPDOgK.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "043",
+    "name": "賭神之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/sSAIojS.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "044",
+    "name": "大演員之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/YTyCYve.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "045",
+    "name": "大社長之蛋",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/An6DO1W.jpg",
+    "desc": "每日放在手中孵三小時。1至10年後會變成事實的孵蛋，孵的時候意願越強越早孵化"
+  },
+  {
+    "id": "046",
+    "name": "金粉少女",
+    "rarity": "A",
+    "cost": 13,
+    "img": "https://i.imgur.com/XEGUH4P.jpg",
+    "desc": "全身會散發金粉的少女。一日洗一次澡會取得約500克的黃金，非常害羞的她終日足不出戶"
+  },
+  {
+    "id": "047",
+    "name": "睡眠少女",
+    "rarity": "A",
+    "cost": 11,
+    "img": "https://i.imgur.com/t85GoQE.jpg",
+    "desc": "會代你睡覺的少女，這樣便可以不用睡眠而24小時行動"
+  },
+  {
+    "id": "048",
+    "name": "發香少女",
+    "rarity": "A",
+    "cost": 15,
+    "img": "https://i.imgur.com/CFljkOd.jpg",
+    "desc": "會散發出對你來說最舒適的香氣，只要伴在身傍就可以消除壓力，恢復精神"
+  },
+  {
+    "id": "049",
+    "name": "掌上人魚",
+    "rarity": "A",
+    "cost": 23,
+    "img": "https://i.imgur.com/I1jQgBz.jpg",
+    "desc": "可以用手托著般大的人魚。當身處的環境舒適及心情好的時候，會用非常動聽聲線唱歌"
+  },
+  {
+    "id": "050",
+    "name": "掌上暴龍",
+    "rarity": "A",
+    "cost": 11,
+    "img": "https://i.imgur.com/qvPyzNS.jpg",
+    "desc": "可以用手托著般大的恐龍。進化非常迅速，會因應環境像世代的改變外貌"
+  },
+  {
+    "id": "051",
+    "name": "掌上龍",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/XYNZHgn.jpg",
+    "desc": "可以用手托著般大的龍。很聽主人的話，如果用愛心加以養育，會變得懂說話"
+  },
+  {
+    "id": "052",
+    "name": "珍珠蝗",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/M5jYXfE.jpg",
+    "desc": "在腹部藏有珍珠的蝗蟲，十多年會有一次大蝗災"
+  },
+  {
+    "id": "053",
+    "name": "白色帝王獨角仙",
+    "rarity": "A",
+    "cost": 30,
+    "img": "https://i.imgur.com/k0s1c3S.jpg",
+    "desc": "傳說中的昆蟲。利用特殊的費洛蒙吸引其他昆蟲為牠工作。唯一離開族群的時間是黃昏的散步"
+  },
+  {
+    "id": "054",
+    "name": "千年鳳蝶",
+    "rarity": "A",
+    "cost": 25,
+    "img": "https://i.imgur.com/VQdsEbf.jpg",
+    "desc": "傳說中的昆蟲。有誰能捉到這種蝴蝶，他的之後多代都會生活富裕，因而得名"
+  },
+  {
+    "id": "055",
+    "name": "復仇商店",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/9MRPa7o.jpg",
+    "desc": "如果對店主說出平時的怨恨，將會因應仇恨的程度幫你向對方報復。如果給多些錢，可能會有更重的報復"
+  },
+  {
+    "id": "056",
+    "name": "回憶攝影館",
+    "rarity": "B",
+    "cost": 25,
+    "img": "https://i.imgur.com/8PHUQZt.jpg",
+    "desc": "說出年月日的話，可以得到自己那時的照片的店，可以連環快拍"
+  },
+  {
+    "id": "057",
+    "name": "隱居地產",
+    "rarity": "A",
+    "cost": 11,
+    "img": "https://i.imgur.com/7EbECnd.jpg",
+    "desc": "會替你在喜歡的地方蓋一間只屬於你的房子。居住條件是其他人不能進入該房子，不能提及這間房子的事"
+  },
+  {
+    "id": "058",
+    "name": "出租秘密影視店",
+    "rarity": "A",
+    "cost": 13,
+    "img": "https://i.imgur.com/NeQOhmn.jpg",
+    "desc": "可以看見他人秘密的影視店。入會條件是不能給其他人看租來的帶子，不能對其他人說出內容"
+  },
+  {
+    "id": "059",
+    "name": "即席外語學校",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/hpBJVO2.jpg",
+    "desc": "在這裡學習的時間會有專用的計時器累積計算，在計時器上累積的時間內會精通外語"
+  },
+  {
+    "id": "060",
+    "name": "失物速遞",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/YiQnRqi.jpg",
+    "desc": "致電專線，說明失物的事之後第二日之後會送回。在失物失去一個月後的情況下是不受理的"
+  },
+  {
+    "id": "061",
+    "name": "投幣檢查",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/FdrGPFi.jpg",
+    "desc": "花費500元作全身檢查。但只會有「有異狀」及「無異狀」兩個答覆，「有異狀」的時間請到醫院"
+  },
+  {
+    "id": "062",
+    "name": "會所大王",
+    "rarity": "B",
+    "cost": 20,
+    "img": "https://i.imgur.com/pTDUess.jpg",
+    "desc": "在這間店逗留的期間，店內的人都會聽從你的命令。但是店內一小時等於外間一日"
+  },
+  {
+    "id": "063",
+    "name": "虛擬餐廳",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/NcxrNtT.jpg",
+    "desc": "只要點菜就能點任何菜色。雖然會有飽的感覺但實際上沒有東西下肚，最後會供應營養劑"
+  },
+  {
+    "id": "064",
+    "name": "魔女的媚藥",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/4IgYdlX.jpg",
+    "desc": "將這種藥含在口中餵給心儀的對象吞下，就會成為你的俘虜。一粒有效一星期，一瓶五百粒"
+  },
+  {
+    "id": "065",
+    "name": "魔女的返老還童藥",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/fl7La5k.jpg",
+    "desc": "吃一粒的話會減一歲的藥。知識及記憶會留下。要注意吃下比自己年齡多的數量是會死的，一瓶一百粒"
+  },
+  {
+    "id": "066",
+    "name": "魔女的瘦身藥",
+    "rarity": "B",
+    "cost": 28,
+    "img": "https://i.imgur.com/y3N7f5E.jpg",
+    "desc": "吃一粒的話會減一公斤體重的藥。要注意吃下比自己體重多的數量是會死的，一瓶二百粒"
+  },
+  {
+    "id": "067",
+    "name": "長老的增高藥",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/tO17onI.jpg",
+    "desc": "吃一粒的話會增高1釐米的藥，一瓶一百粒，過了二十歲服用最理想"
+  },
+  {
+    "id": "068",
+    "name": "長老的精力增強藥",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/IKHWCfi.jpg",
+    "desc": "令到肉體的一部分極之活躍的藥，回數、持續力不容置疑，一瓶五百粒"
+  },
+  {
+    "id": "069",
+    "name": "長老的生毛藥",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/xq5PAcJ.jpg",
+    "desc": "塗搽了的地方會變得毛茸茸。塗搽的時候要戴上手套，否則手掌及手指尖都會長出毛來。一瓶200毫升（用在頭上的話十人分量）"
+  },
+  {
+    "id": "070",
+    "name": "瘋狂博士的肌肉增強劑",
+    "rarity": "A",
+    "cost": 16,
+    "img": "https://i.imgur.com/UcbthCN.jpg",
+    "desc": "喝下之後如想像般會增加肌肉。要不間斷地連續飲用，一日一公升。一公升裝，一盒十瓶，一套七盒"
+  },
+  {
+    "id": "071",
+    "name": "瘋狂博士的費洛蒙劑",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/4xjLcS4.jpg",
+    "desc": "噴在身上會吸引異性。但是效果不持久及可能吸引大量跟蹤者，要小心注意"
+  },
+  {
+    "id": "072",
+    "name": "瘋狂博士的整容機器",
+    "rarity": "A",
+    "cost": 15,
+    "img": "https://i.imgur.com/zuFVc21.jpg",
+    "desc": "可以整型與照片上一模一樣的神奇機器，不過有5%機率無效，1%機率會毀容"
+  },
+  {
+    "id": "073",
+    "name": "黑暗的翡翠",
+    "rarity": "A",
+    "cost": 15,
+    "img": "https://i.imgur.com/jSwdm3v.jpg",
+    "desc": "受惡魔加持的寶石。當持有者大難臨頭的時候，會將災難傳給他人"
+  },
+  {
+    "id": "074",
+    "name": "賢者的海藍寶石",
+    "rarity": "A",
+    "cost": 11,
+    "img": "https://i.imgur.com/Wetf5c3.jpg",
+    "desc": "擁有者都能交際，會和很多才智型的人做朋友吧"
+  },
+  {
+    "id": "075",
+    "name": "奇運的綠寶石",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/IYOPsfd.jpg",
+    "desc": "擁有者能遇上其他人絕對不會遇上的體驗，是幸運是不幸倒是不能選擇…"
+  },
+  {
+    "id": "076",
+    "name": "流浪紅寶石",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/VT5wBoV.jpg",
+    "desc": "這顆紅寶石的擁有者得到巨額的財富的代價是要居無定所，不能逗留在同一個地方超過一星期"
+  },
+  {
+    "id": "077",
+    "name": "呼喚美麗的綠柱石",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/IAuNHfQ.jpg",
+    "desc": "擁有者的周圍會吸引美的奉獻者聚集，你自己也會發出光輝，擁有與眾不同的魅力"
+  },
+  {
+    "id": "078",
+    "name": "孤獨的藍寶石",
+    "rarity": "B",
+    "cost": 30,
+    "img": "https://i.imgur.com/md3wSKt.jpg",
+    "desc": "這顆藍寶石的擁有者得到巨額的財富的代價是要一生孑然一身，朋友、戀人、甚至家人都會立即離開擁有者"
+  },
+  {
+    "id": "079",
+    "name": "彩虹鑽石",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/YzpLO4W.jpg",
+    "desc": "發出七彩光華的鑽石。用這顆鑽石求婚的話100%成功，只要有鑽石在身邊，倆口子不會分開"
+  },
+  {
+    "id": "080",
+    "name": "浮游石",
+    "rarity": "S",
+    "cost": 7,
+    "img": "https://i.imgur.com/6Fr3rmx.jpg",
+    "desc": "物如其名，浮在空中的石。1卡大小的石足以浮起一個人類，沒有太陽光的照射的話是得不到浮力的"
+  },
+  {
+    "id": "081",
+    "name": "藍色行星",
+    "rarity": "SS",
+    "cost": 5,
+    "img": "https://i.imgur.com/6Q2eRRa.jpg",
+    "desc": "獨一無二的泛藍光寶石。由於不屬於任何礦物，所以以來自宇宙的禮物之義而冠其名"
+  },
+  {
+    "id": "082",
+    "name": "天懲之杖",
+    "rarity": "A",
+    "cost": 15,
+    "img": "https://i.imgur.com/nAzRtPW.jpg",
+    "desc": "一面呼喚將想予以懲戒的人的名字，一面將此杖指向天空。你自己和對方哪一邊作孽多些就會遭受強烈的災難"
+  },
+  {
+    "id": "083",
+    "name": "真實之劍",
+    "rarity": "B",
+    "cost": 22,
+    "img": "https://i.imgur.com/K2K6w0V.jpg",
+    "desc": "將贗品一刀兩斷的劍。審判的時候使用也能使犯罪者發抖。雖然當砍到真實的時候粉碎，將之放回劍鞘一日就能再生"
+  },
+  {
+    "id": "084",
+    "name": "聖騎士的項鍊",
+    "rarity": "D",
+    "cost": 60,
+    "img": "https://i.imgur.com/u7CSFu6.jpg",
+    "desc": "戴上這個的玩家不單可以反彈咒語，也能解除接觸過的卡上的咒語"
+  },
+  {
+    "id": "085",
+    "name": "替身之鎧",
+    "rarity": "S",
+    "cost": 8,
+    "img": "https://i.imgur.com/JVNAj9C.jpg",
+    "desc": "解除卡化之後可以令白兵攻擊完全無效的鎧甲。但是由於面對攻擊的耐用次數是由1至100次不等，所以要注意突然瓦解"
+  },
+  {
+    "id": "086",
+    "name": "挫折之弓",
+    "rarity": "A",
+    "cost": 11,
+    "img": "https://i.imgur.com/s4Zvz9u.jpg",
+    "desc": "裝備了之後可以因應殘餘弓的數量使用「脫離」。弓一套十把，每使用一次「脫離」會減少一把"
+  },
+  {
+    "id": "087",
+    "name": "信念之盾",
+    "rarity": "S",
+    "cost": 15,
+    "img": "https://i.imgur.com/tk6H9bN.jpg",
+    "desc": "在裝備了這個的玩家的二十米範圍內，「左遷」「初心」「漂流」「衝突」的咒語全部無效"
+  },
+  {
+    "id": "088",
+    "name": "不死之大金槌",
+    "rarity": "A",
+    "cost": 15,
+    "img": "https://i.imgur.com/iRNvwie.jpg",
+    "desc": "被此金鎚攻擊的人，會隨機承受各種攻擊咒語的效果。對使用了「堅牢」「聖騎士的項鍊」的人無效"
+  },
+  {
+    "id": "089",
+    "name": "稅務長的護手",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/55GNAIM.jpg",
+    "desc": "裝備了此護手可以使用「徵收」咒語。但每使用一次會隨機破壞裝備者指定卡套內的卡一張"
+  },
+  {
+    "id": "090",
+    "name": "記憶之頭盔",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/kCS9o3S.jpg",
+    "desc": "戴上這個的時候絕對不會忘記所見所聞，美中不足之處是太大太重"
+  },
+  {
+    "id": "091",
+    "name": "塑膠大王",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/jB4RNZk.jpg",
+    "desc": "基於如何組合就可以製成任何交通工具的塑膠模型組合，當然是一比一比例及可以駕駛，但燃料是分開發售的"
+  },
+  {
+    "id": "092",
+    "name": "替身票",
+    "rarity": "S",
+    "cost": 7,
+    "img": "https://i.imgur.com/rCTizdI.jpg",
+    "desc": "將這張票給你想代替的人，可以在24小時之內代替那人工作，一套一千張"
+  },
+  {
+    "id": "093",
+    "name": "人生圖鑑",
+    "rarity": "B",
+    "cost": 28,
+    "img": "https://i.imgur.com/cs3Puln.jpg",
+    "desc": "由出生到現在為止，全部和自己有關的人們都收編其中的圖鑑。最後有數十萬頁也絕不出奇"
+  },
+  {
+    "id": "094",
+    "name": "盜賊之劍",
+    "rarity": "S",
+    "cost": 10,
+    "img": "https://i.imgur.com/X2EiaWq.jpg",
+    "desc": "用這把劍成功攻擊的話，可以隨機給予被攻擊的對手「強奪」「掏摸」「盜竊」其中一個效果"
+  },
+  {
+    "id": "095",
+    "name": "秘密斗篷",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/N3Tmqi5.jpg",
+    "desc": "披上之後會有持續的「暗幕」效果"
+  },
+  {
+    "id": "096",
+    "name": "千里眼之蛇",
+    "rarity": "A",
+    "cost": 12,
+    "img": "https://i.imgur.com/GKlptTW.jpg",
+    "desc": "給一張C級以上的卡牠吃，會吐出「念視」卡的蛇"
+  },
+  {
+    "id": "097",
+    "name": "立體相機",
+    "rarity": "A",
+    "cost": 20,
+    "img": "https://i.imgur.com/V84lpnA.jpg",
+    "desc": "可以將拍攝到的物體如立體般沖曬出來。不單可以調節尺寸，還可以重現質感"
+  },
+  {
+    "id": "098",
+    "name": "銀犬",
+    "rarity": "S",
+    "cost": 8,
+    "img": "https://i.imgur.com/khhIgpZ.jpg",
+    "desc": "瀕臨絕種的珍獸，長有銀色的毛。一日將5克的金混在狗糧中餵食，會排出一公斤的銀"
+  },
+  {
+    "id": "099",
+    "name": "傭人熊貓",
+    "rarity": "S",
+    "cost": 6,
+    "img": "https://i.imgur.com/2ryAeK8.jpg",
+    "desc": "瀕臨絕種的珍獸。非常喜歡清潔，入廚是興趣。愛好獨自裁製洋服及整理花園，比任何人都擅長照顧孩子"
+  }
+];
+
+// ── State ──
+let counts = {};
+let curTab = 'all';
+let searchQ = '';
+let modalId = null;
+
+function load() {
+  try { counts = JSON.parse(localStorage.getItem('gi_counts') || '{}'); } catch(e) { counts = {}; }
+}
+function save() {
+  try { localStorage.setItem('gi_counts', JSON.stringify(counts)); } catch(e) {}
+}
+function cnt(id) { return counts[id] || 0; }
+function setCnt(id, v) { counts[id] = Math.max(0, v); save(); }
+
+// ── Filter ──
+function filtered() {
+  const q = searchQ.toLowerCase();
+  return CARDS.filter(c => {
+    if (q && !c.id.includes(q) && !c.name.toLowerCase().includes(q) && !c.desc.toLowerCase().includes(q)) return false;
+    switch(curTab) {
+      case 'owned':   return cnt(c.id) > 0;
+      case 'missing': return cnt(c.id) === 0;
+      case 'SS': case 'S': case 'A': case 'B': return c.rarity === curTab;
+      case 'D+': return ['D','G'].includes(c.rarity);
+      default: return true;
+    }
+  });
+}
+
+// ── Stats ──
+function updateStats() {
+  const own = CARDS.filter(c => cnt(c.id) > 0).length;
+  const tot = CARDS.reduce((s,c) => s+cnt(c.id), 0);
+  const pct = Math.round(own/CARDS.length*100);
+  document.getElementById('sOwned').textContent = own;
+  document.getElementById('sTotal').textContent = tot;
+  document.getElementById('sPct').textContent = pct + '%';
+  document.getElementById('progFill').style.width = pct + '%';
+}
+
+// ── Render ──
+function rarity2cls(r) { return 'r-' + (r||''); }
+
+function renderGrid() {
+  const cards = filtered();
+  const grid = document.getElementById('grid');
+  if (!cards.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🃏</div>沒有找到對應的卡片</div>';
+    return;
+  }
+  grid.innerHTML = cards.map(c => {
+    const n = cnt(c.id);
+    const owned = n > 0;
+    return `<div class="card-item ${owned?'owned':'not-owned'}" data-id="${c.id}">
+      <div class="card-top">
+        <span class="card-num">No.${c.id}</span>
+        <span class="card-name-small">${c.name}</span>
+        <span class="rarity-badge ${rarity2cls(c.rarity)}">${c.rarity}</span>
+      </div>
+      <div class="card-img-wrap">
+        <img class="card-img" src="${c.img}" alt="${c.name}" loading="lazy"
+             onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+        <div class="img-fallback" style="display:none">🃏</div>
+        <div class="cnt-badge ${n===0?'zero':''}">${n}</div>
+      </div>
+      <div class="card-desc-area">${c.desc}</div>
+      <div class="card-ctrl">
+        <button class="ctrl-btn" data-id="${c.id}" data-a="dec">−</button>
+        <div class="ctrl-num">${n}張</div>
+        <button class="ctrl-btn" data-id="${c.id}" data-a="inc">＋</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+// ── Events ──
+document.getElementById('grid').addEventListener('click', e => {
+  const btn = e.target.closest('[data-a]');
+  if (btn) {
+    e.stopPropagation();
+    const id = btn.dataset.id, a = btn.dataset.a;
+    setCnt(id, cnt(id) + (a==='inc'?1:-1));
+    renderGrid();
+    return;
+  }
+  const item = e.target.closest('.card-item');
+  if (item) openModal(item.dataset.id);
+});
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  curTab = tab.dataset.t;
+  renderGrid();
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQ = e.target.value;
+  renderGrid();
+});
+
+// ── Modal ──
+function openModal(id) {
+  const c = CARDS.find(x=>x.id===id);
+  if (!c) return;
+  modalId = id;
+  document.getElementById('mTitle').textContent = `No.${c.id} ${c.name}`;
+  document.getElementById('mNum').textContent = `No.${c.id}`;
+  const rb = document.getElementById('mRarity');
+  rb.textContent = c.rarity; rb.className = 'rarity-badge ' + rarity2cls(c.rarity);
+  const img = document.getElementById('mImg');
+  const fb = document.getElementById('mFallback');
+  img.style.display = ''; fb.style.display = 'none';
+  img.src = c.img; img.alt = c.name;
+  document.getElementById('mName').textContent = c.name;
+  document.getElementById('mDesc').textContent = c.desc;
+  document.getElementById('mCount').textContent = cnt(id);
+  document.getElementById('mMeta').innerHTML = `
+    <span class="chip chip-gold">稀有度 ${c.rarity}</span>
+    <span class="chip chip-dim">限制 ${c.cost} DP</span>
+  `;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+
+document.getElementById('mClose').onclick = closeModal;
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeModal();
+});
+function closeModal() {
+  document.getElementById('overlay').classList.add('hidden');
+  if (modalId) renderGrid();
+  modalId = null;
+}
+document.getElementById('mPlus').onclick = () => {
+  if (!modalId) return;
+  setCnt(modalId, cnt(modalId)+1);
+  document.getElementById('mCount').textContent = cnt(modalId);
+  updateStats();
+};
+document.getElementById('mMinus').onclick = () => {
+  if (!modalId) return;
+  setCnt(modalId, cnt(modalId)-1);
+  document.getElementById('mCount').textContent = cnt(modalId);
+  updateStats();
+};
+
+// ── Init ──
+load();
+renderGrid();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      console.log('SW registered:', reg.scope);
+    }).catch(err => console.log('SW error:', err));
+  });
+}
+</script>
+<!-- PWA Install Banner -->
+<div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:999;
+  background:linear-gradient(135deg,#1a0c04,#2e1408);border-top:2px solid #f0c030;
+  padding:12px 16px;display:none;align-items:center;gap:10px;">
+  <span style="font-size:22px">🃏</span>
+  <div style="flex:1">
+    <div style="font-size:13px;font-weight:700;color:#f0c030">安裝到主畫面</div>
+    <div style="font-size:11px;color:#8a7550">像 App 一樣離線使用</div>
+  </div>
+  <button id="installBtn" style="background:#f0c030;color:#1a0800;border:none;border-radius:6px;
+    padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">安裝</button>
+  <button id="dismissBtn" style="background:none;border:none;color:#8a7550;font-size:20px;cursor:pointer;padding:4px">✕</button>
+</div>
+
+<script>
+let deferredPrompt = null;
+const banner = document.getElementById('installBanner');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  banner.style.display = 'flex';
+});
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  banner.style.display = 'none';
+});
+
+document.getElementById('dismissBtn').addEventListener('click', () => {
+  banner.style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  banner.style.display = 'none';
+  deferredPrompt = null;
+});
+</script>
+</body>
+</html>
+
+{
+  "name": "貪婪之島 指定口袋卡圖鑑",
+  "short_name": "貪婪之島",
+  "description": "Hunter x Hunter 貪婪之島 100張指定口袋卡收藏管理",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d0a05",
+  "theme_color": "#0d0a05",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+const CACHE_NAME = 'greedy-island-v1';
+
+// Cache these on install
+const PRECACHE = [
+  './',
+  './index.html',
+  './manifest.json'
+];
+
+// Install: cache app shell
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE))
+  );
+  self.skipWaiting();
+});
+
+// Activate: clean up old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// Fetch: cache-first for app shell, network-first for card images
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // Card images from imgur: try network first, fallback to cache
+  if (url.hostname === 'i.imgur.com') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async cache => {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        try {
+          const response = await fetch(event.request);
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        } catch {
+          return cached || new Response('', { status: 404 });
+        }
+      })
+    );
+    return;
+  }
+
+  // App shell: cache first
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      return cached || fetch(event.request).then(response => {
+        if (response.ok) {
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+        }
+        return response;
+      }).catch(() => cached);
+    })
+  );
+});
